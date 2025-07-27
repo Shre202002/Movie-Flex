@@ -13,7 +13,7 @@ export default async function HomePage({ searchParams }: { searchParams?: { [key
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold font-headline mb-2 text-primary">All Movies</h1>
+        <h1 className="text-4xl md:text-5xl font-bold font-headline mb-2 text-primary">All Movies Download</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Explore our collection of the latest and old movies. Use the search and filters to find your next favorite film.
         </p>

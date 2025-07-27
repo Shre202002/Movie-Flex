@@ -18,7 +18,7 @@ const fontHeadline = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Kiwi Cinema Clone',
+  title: 'All Movies Download',
   description: 'A modern movie listing website built with Next.js.',
 };
 

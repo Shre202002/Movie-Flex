@@ -1,4 +1,4 @@
-# **App Name**: Kiwi Cinema Clone
+# **App Name**: All Movies Download
 
 ## Core Features:
 
