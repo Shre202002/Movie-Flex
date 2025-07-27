@@ -15,7 +15,7 @@ export default async function HomePage({ searchParams }: { searchParams?: { [key
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold font-headline mb-2 text-primary">All Movies</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Explore our collection of the latest and upcoming movies. Use the search below to find your next favorite film.
+          Explore our collection of the latest and old movies. Use the search and filters to find your next favorite film.
         </p>
       </div>
       <SearchableMovieList 

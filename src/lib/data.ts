@@ -22,7 +22,6 @@ function mapFirestoreDocToMovie(doc: any): Movie {
         director: Array.isArray(movieData.director) ? movieData.director.join(', ') : movieData.director,
         actors: movieData.actors || [],
         plot: movieData.description,
-        comingSoon: movieData.release ? new Date().getFullYear() < parseInt(movieData.release, 10) : false,
         language: movieData.country,
         quality: firestoreData.quality,
         size: '', 

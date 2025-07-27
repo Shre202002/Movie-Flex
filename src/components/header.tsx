@@ -98,14 +98,7 @@ export function Header() {
           </div>
         </InstantSearch>
 
-        {/* <nav className="flex items-center gap-2"> */}
-        {/* <Button variant="ghost" asChild>
-            <Link href="/">Home</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/coming-soon">Coming Soon</Link>
-          </Button> */}
-        {/* </nav> */}
+        
       </div>
     </header>
   );

@@ -5,7 +5,7 @@
 - Movie Listings: Display a grid of movies, fetched from a local JSON file.
 - Movie Details: Provide details about movies. Pull the content dynamically from the JSON data.
 - Movie Search: Implement search functionality, allowing users to filter movies by title or other criteria present in the JSON data.
-- Coming Soon Section: Add a "Coming Soon" section to showcase movies that will be available in the future.
+
 - AI-Powered Movie Summaries: Use an LLM tool to create a summary or highlight for each film based on its details. The LLM tool must decide when information will enhance its output
 
 ## Style Guidelines:

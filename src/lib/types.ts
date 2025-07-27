@@ -9,7 +9,6 @@ export interface Movie {
   director: string;
   actors: string[];
   plot: string;
-  comingSoon: boolean;
   language: string;
   quality: string;
   size: string;
