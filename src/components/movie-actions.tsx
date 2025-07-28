@@ -46,8 +46,8 @@ export function DownloadLinks({ links, movieId }: { links: { [key: string]: stri
   }
 
   const sortedLinks = Object.entries(links).sort((a, b) => {
-    const qualityA = parseInt(a[0].replace('p', ''));
-    const qualityB = parseInt(b[0].replace('p', ''));
+    const qualityA = parseInt(a[0].replace(/[^0-9]/g, ''));
+    const qualityB = parseInt(b[0].replace(/[^0-9]/g, ''));
     return qualityB - qualityA;
   });
 
