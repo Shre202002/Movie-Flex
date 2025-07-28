@@ -70,7 +70,9 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
                   className="object-cover"
                 />
+                
               </div>
+              <a href="https://beta.publishers.adsterra.com/referral/q3SnNPbXfe" rel="nofollow"><img alt="banner" src="https://landings-cdn.adsterratech.com/referralBanners/gif/300x425_adsterra_reff.gif" /></a>
             </CardContent>
           </Card>
         </div>

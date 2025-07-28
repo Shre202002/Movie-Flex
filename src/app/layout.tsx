@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Toaster } from '@/components/ui/toaster';
+import Head from 'next/head';
+
 
 const fontBody = Inter({
   subsets: ['latin'],
@@ -29,6 +31,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <Head>
+      <script type='text/javascript' async src='//pl27280340.profitableratecpm.com/1b/36/cc/1b36cc294dbb38e45b40365d140a128c.js'></script>
+      
+      </Head>
       <body
         className={cn(
           'min-h-screen bg-background font-body antialiased flex flex-col',
