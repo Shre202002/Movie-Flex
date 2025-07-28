@@ -52,7 +52,7 @@ export function DownloadLinks({ links, movieId }: { links: { [key: string]: stri
   });
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       {sortedLinks.map(([quality, link]) => {
         const [buttonText, setButtonText] = useState(quality);
         return(
@@ -61,8 +61,9 @@ export function DownloadLinks({ links, movieId }: { links: { [key: string]: stri
               setButtonText("generating...")
               window.open(await handleGenerateLink(movieId, link), "_blank")
               setButtonText(quality)
-          }} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Download className="mr-2" /> {buttonText}
+          }} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 whitespace-normal h-auto py-3">
+          <Download className="mr-2" /> 
+          <span className="truncate">{buttonText}</span>
         </Button>
         )
       })}
