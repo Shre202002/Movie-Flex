@@ -15,6 +15,7 @@ export interface Movie {
   streamUrl: string;
   downloadLinks: { [key: string]: string };
   category: string;
+  trailerId: string | null;
 }
 
 export interface FirestoreMovieData {
@@ -38,6 +39,7 @@ export interface FirestoreMovieData {
         votes: string;
         review: string;
         description: string;
+        trailer_id?: string | null;
         stream_online_link?: {
             title: string;
             link: string;

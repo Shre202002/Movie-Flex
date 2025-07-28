@@ -33,6 +33,7 @@ function mapFirestoreDocToMovie(doc: any): Movie {
             return acc;
         }, {} as { [key: string]: string }) || {},
         category: firestoreData.category,
+        trailerId: movieData.trailer_id || null,
     };
 }
 

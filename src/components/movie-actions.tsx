@@ -30,7 +30,7 @@ export function StreamOnline({ link, movieId }: { link: string; movieId: string 
       setButtonText("generating...")
       window.open(await handleGenerateLink(movieId, link), "_blank")
       setButtonText("Stream Online")
-    }} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+    }} size="lg" variant="outline">
       <PlayCircle className="mr-2" /> {buttonText}
     </Button>
   );
@@ -69,4 +69,3 @@ export function DownloadLinks({ links, movieId }: { links: { [key: string]: stri
     </div>
   );
 }
-

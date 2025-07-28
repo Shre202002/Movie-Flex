@@ -11,6 +11,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Star, Calendar, Film, Languages, Users, Video } from 'lucide-react';
 import { StreamOnline, DownloadLinks } from '@/components/movie-actions';
 import { MovieList } from '@/components/movie-list';
+import { TrailerPlayer } from '@/components/trailer-player';
 
 
 export default async function MovieDetailsPage({ params }: { params: { slug: string } }) {
@@ -120,15 +121,18 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
             <CardHeader>
               <CardTitle>Watch Movie</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <div>
-                    <h2 className="text-lg font-semibold mb-3">Stream Online</h2>
-                    <StreamOnline link={movie.streamUrl} movieId={movie.id} />
-                </div>
-                <div>
-                    <h2 className="text-lg font-semibold mb-3">Download Links</h2>
-                    <DownloadLinks links={movie.downloadLinks} movieId={movie.id} />
-                </div>
+            <CardContent className="flex flex-wrap gap-4">
+                <StreamOnline link={movie.streamUrl} movieId={movie.id} />
+                <TrailerPlayer trailerId={movie.trailerId} movieTitle={movie.title} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+                <CardTitle>Download Links</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <DownloadLinks links={movie.downloadLinks} movieId={movie.id} />
             </CardContent>
           </Card>
 
