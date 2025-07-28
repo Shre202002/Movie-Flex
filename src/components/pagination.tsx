@@ -9,18 +9,24 @@ import { cn } from '@/lib/utils';
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  onPageChange?: (page: number) => void;
 }
 
-export function Pagination({ currentPage, totalPages }: PaginationProps) {
+export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
-    const params = new URLSearchParams(searchParams);
-    params.set('page', page.toString());
-    router.push(`${pathname}?${params.toString()}`);
+
+    if (onPageChange) {
+      onPageChange(page);
+    } else {
+      const params = new URLSearchParams(searchParams);
+      params.set('page', page.toString());
+      router.push(`${pathname}?${params.toString()}`);
+    }
   };
 
   const getPageNumbers = () => {
@@ -57,6 +63,10 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   };
 
   const pageNumbers = getPageNumbers();
+  
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-center space-x-2 py-8">
