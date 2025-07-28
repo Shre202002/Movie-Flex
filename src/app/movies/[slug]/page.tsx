@@ -59,6 +59,9 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
         </BreadcrumbList>
       </Breadcrumb>
       
+      {/* Ad Network Adsterr */}
+      <div id="container-4dd88bdfb50ac5869a799bbd41c331f1"></div>
+
       <div className="grid md:grid-cols-12 gap-8">
         <div className="md:col-span-4 lg:col-span-3">
           <Card className="overflow-hidden sticky top-24">
@@ -116,6 +119,9 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
                 </p>
             </CardContent>
           </Card>
+          
+          {/* Ad Network */}
+          <div id="container-4dd88bdfb50ac5869a799bbd41c331f1"></div>
 
           <Card>
             <CardHeader>
@@ -135,7 +141,8 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
                 <DownloadLinks links={movie.downloadLinks} movieId={movie.id} />
             </CardContent>
           </Card>
-
+        
+          
         {similarMovies.length > 0 && (
           <Card>
               <CardHeader>

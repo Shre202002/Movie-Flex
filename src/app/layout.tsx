@@ -40,8 +40,19 @@ export default function RootLayout({
         )}
       >
         <Script
-          src="//pl27280340.profitableratecpm.com/1b/36/cc/1b36cc294dbb38e45b40365d140a128c.js"
+          src="//powderencouraged.com/1b/36/cc/1b36cc294dbb38e45b40365d140a128c.js"
           strategy="afterInteractive"
+        />
+        <Script
+          src="//powderencouraged.com/da/11/d7/da11d78c472c36e22115058e17315051.js"
+          strategy="afterInteractive"
+        />
+        
+        <Script
+          src="//powderencouraged.com/4dd88bdfb50ac5869a799bbd41c331f1/invoke.js"
+          strategy="afterInteractive"
+          data-cfasync="false"
+          async
         />
         <Header />
         <div className="flex-grow">{children}</div>
