@@ -14,13 +14,13 @@ const searchClient = algoliasearch(`${process.env.NEXT_PUBLIC_ALGOLIA_APP_ID}`, 
 
 const Hit = ({ hit }: any) => (
   <a href={`/movies/${hit.objectID}`}>
-  <article className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-md transition bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <article className="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-md transition bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
     <Image
       src={hit.image_src}
       alt={hit.title}
       width={50}
       height={100}
-      className="hidden sm:block h-auto object-cover rounded-md border border-gray-300 dark:border-gray-600"
+      className="h-auto object-cover rounded-md border border-gray-300 dark:border-gray-600"
     />
     <div className="flex flex-col justify-between">
       <h1 className="sm:text-lg font-semibold text-gray-800 dark:text-gray-100">
