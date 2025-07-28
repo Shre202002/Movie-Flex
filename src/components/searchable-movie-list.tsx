@@ -3,9 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import type { Movie } from '@/lib/types';
-import { Input } from '@/components/ui/input';
 import { MovieList } from './movie-list';
-import { Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,8 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from '@/components/ui/label';
-import { Pagination } from '@/components/pagination';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Pagination } from './pagination';
 
 interface SearchableMovieListProps {
   initialMovies: Movie[];
@@ -26,12 +23,15 @@ interface SearchableMovieListProps {
   };
 }
 
+const PAGE_SIZE = 30;
+
 export function SearchableMovieList({ initialMovies, allMoviesForFilter, pagination }: SearchableMovieListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setIsClient(true);
@@ -70,12 +70,12 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
     return ['All', ...Array.from(years).sort((a,b) => b.localeCompare(a))];
   }, [allMoviesForFilter]);
 
+  const hasActiveFilters = useMemo(() => {
+     return !!(searchTerm || (selectedCategory && selectedCategory !== 'All') || (selectedGenre && selectedGenre !== 'All') || (selectedYear && selectedYear !== 'All'));
+  }, [searchTerm, selectedCategory, selectedGenre, selectedYear]);
+  
   const filteredMovies = useMemo(() => {
-    // When filters are active, we filter from the complete list. 
-    // Otherwise, we show the paginated initial list.
-    const hasFilters = searchTerm || (selectedCategory && selectedCategory !== 'All') || (selectedGenre && selectedGenre !== 'All') || (selectedYear && selectedYear !== 'All');
-    
-    let sourceMovies = hasFilters ? allMoviesForFilter : initialMovies;
+    let sourceMovies = hasActiveFilters ? allMoviesForFilter : initialMovies;
 
     let result = sourceMovies;
 
@@ -102,24 +102,23 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
     }
 
     return result;
-  }, [initialMovies, allMoviesForFilter, searchTerm, selectedGenre, selectedCategory, selectedYear]);
+  }, [initialMovies, allMoviesForFilter, searchTerm, selectedGenre, selectedCategory, selectedYear, hasActiveFilters]);
 
-  const handleGenreChange = (genre: string) => {
-    setSelectedGenre(genre === 'All' ? null : genre);
+  const totalPages = hasActiveFilters ? Math.ceil(filteredMovies.length / PAGE_SIZE) : pagination.totalPages;
+  
+  const paginatedMovies = useMemo(() => {
+    if (hasActiveFilters) {
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        return filteredMovies.slice(startIndex, startIndex + PAGE_SIZE);
+    }
+    return initialMovies;
+  }, [filteredMovies, currentPage, hasActiveFilters, initialMovies]);
+
+  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string | null>>) => (value: string) => {
+    setter(value === 'All' ? null : value);
+    setCurrentPage(1);
   };
-
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category === 'All' ? null : category);
-  }
-
-  const handleYearChange = (year: string) => {
-    setSelectedYear(year === 'All' ? null : year);
-  }
-
-  const hasActiveFilters = useMemo(() => {
-     return !!(searchTerm || (selectedCategory && selectedCategory !== 'All') || (selectedGenre && selectedGenre !== 'All') || (selectedYear && selectedYear !== 'All'));
-  }, [searchTerm, selectedCategory, selectedGenre, selectedYear]);
-
+  
   if (!isClient) {
     return (
       <div className="space-y-8">
@@ -131,6 +130,7 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
           <Pagination
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}
+            onPageChange={(page) => {}}
           />
         )}
       </div>
@@ -140,22 +140,10 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
   return (
     <div className="space-y-8">
       <div className="max-w-5xl mx-auto space-y-4">
-        {/* <div className="relative flex-grow">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by title, director..."
-            className="pl-12 h-12 text-base w-full"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            aria-label="Search movies"
-          />
-        </div> */}
-        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="category-filter">Category</Label>
-                <Select onValueChange={handleCategoryChange} defaultValue={selectedCategory || 'All'}>
+                <Select onValueChange={handleFilterChange(setSelectedCategory)} defaultValue={selectedCategory || 'All'}>
                   <SelectTrigger id="category-filter" className="h-12 text-base">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -171,7 +159,7 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
 
             <div className="grid gap-2">
                 <Label htmlFor="genre-filter">Genre</Label>
-                <Select onValueChange={handleGenreChange} defaultValue={selectedGenre || 'All'}>
+                <Select onValueChange={handleFilterChange(setSelectedGenre)} defaultValue={selectedGenre || 'All'}>
                     <SelectTrigger id="genre-filter" className="h-12 text-base">
                         <SelectValue placeholder="Select a genre" />
                     </SelectTrigger>
@@ -187,7 +175,7 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
 
             <div className="grid gap-2">
                 <Label htmlFor="year-filter">Release Year</Label>
-                <Select onValueChange={handleYearChange} defaultValue={selectedYear || 'All'}>
+                <Select onValueChange={handleFilterChange(setSelectedYear)} defaultValue={selectedYear || 'All'}>
                 <SelectTrigger id="year-filter" className="h-12 text-base">
                     <SelectValue placeholder="Select a year" />
                 </SelectTrigger>
@@ -203,14 +191,13 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
         </div>
       </div>
 
-      <MovieList movies={filteredMovies} />
+      <MovieList movies={hasActiveFilters ? paginatedMovies : initialMovies} />
       
-      {!hasActiveFilters && (
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
+      <Pagination
+          currentPage={hasActiveFilters ? currentPage : pagination.currentPage}
+          totalPages={totalPages}
+          onPageChange={hasActiveFilters ? setCurrentPage : undefined}
         />
-      )}
     </div>
   );
 }

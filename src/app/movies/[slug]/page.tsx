@@ -12,6 +12,7 @@ import { Star, Calendar, Film, Languages, Users, Video } from 'lucide-react';
 import { StreamOnline, DownloadLinks } from '@/components/movie-actions';
 import { MovieList } from '@/components/movie-list';
 import { TrailerPlayer } from '@/components/trailer-player';
+import AdBanner from '@/components/AdBanner';
 
 
 export default async function MovieDetailsPage({ params }: { params: { slug: string } }) {
@@ -121,7 +122,7 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
           </Card>
           
           {/* Ad Network */}
-          <div id="container-4dd88bdfb50ac5869a799bbd41c331f1"></div>
+          <AdBanner/>
 
           <Card>
             <CardHeader>
