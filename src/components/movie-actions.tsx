@@ -46,13 +46,13 @@ export function DownloadLinks({ links, movieId }: { links: { [key: string]: stri
   }
 
   const sortedLinks = Object.entries(links).sort((a, b) => {
-    const qualityA = parseInt(a[0].replace('p', ''));
-    const qualityB = parseInt(b[0].replace('p', ''));
+    const qualityA = parseInt(a[0].replace(/[^0-9]/g, ''));
+    const qualityB = parseInt(b[0].replace(/[^0-9]/g, ''));
     return qualityB - qualityA;
   });
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="flex flex-col gap-3">
       {sortedLinks.map(([quality, link]) => {
         const [buttonText, setButtonText] = useState(quality);
         return(
@@ -61,8 +61,9 @@ export function DownloadLinks({ links, movieId }: { links: { [key: string]: stri
               setButtonText("generating...")
               window.open(await handleGenerateLink(movieId, link), "_blank")
               setButtonText(quality)
-          }} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Download className="mr-2" /> {buttonText}
+          }} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 whitespace-normal h-auto py-3">
+          <Download className="mr-2" /> 
+          <span>{buttonText}</span>
         </Button>
         )
       })}

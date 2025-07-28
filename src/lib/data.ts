@@ -27,9 +27,7 @@ function mapFirestoreDocToMovie(doc: any): Movie {
         size: '', 
         streamUrl: movieData.stream_online_link?.link,
         downloadLinks: movieData.gdrive_links?.reduce((acc, link) => {
-            if (link.title.includes('480p')) acc['480p'] = link.link;
-            if (link.title.includes('720p')) acc['720p'] = link.link;
-            if (link.title.includes('1080p')) acc['1080p'] = link.link;
+            acc[link.title] = link.link;
             return acc;
         }, {} as { [key: string]: string }) || {},
         category: firestoreData.category,
