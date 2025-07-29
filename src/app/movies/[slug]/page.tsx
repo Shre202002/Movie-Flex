@@ -13,7 +13,60 @@ import { StreamOnline, DownloadLinks } from '@/components/movie-actions';
 import { MovieList } from '@/components/movie-list';
 import { TrailerPlayer } from '@/components/trailer-player';
 import AdBanner from '@/components/AdBanner';
+import type { Metadata, ResolvingMetadata } from 'next';
 
+type Props = {
+  params: { slug: string }
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  // fetch data
+  const movie = await getMovieById(params.slug);
+
+  if (!movie) {
+    return {
+      title: 'Movie Not Found',
+      description: 'The movie you are looking for could not be found.',
+    }
+  }
+ 
+  // optionally access and extend (rather than replace) parent metadata
+  const previousImages = (await parent).openGraph?.images || []
+ 
+  return {
+    title: `${movie.title} - All Movies Download`,
+    description: movie.plot,
+    keywords: [movie.title, ...movie.genre, movie.director, ...movie.actors, "download", "stream"],
+    openGraph: {
+      title: movie.title,
+      description: movie.plot,
+      url: `https://allmoviesdownload.com/movies/${movie.id}`,
+      siteName: 'All Movies Download',
+      images: [
+        {
+          url: movie.posterUrl,
+          width: 600,
+          height: 900,
+          alt: movie.title,
+        },
+        ...previousImages,
+      ],
+      type: 'video.movie',
+      videos: movie.trailerId ? [`https://www.youtube.com/embed/${movie.trailerId}`] : [],
+    },
+     twitter: {
+      card: 'summary_large_image',
+      title: movie.title,
+      description: movie.plot,
+      images: [movie.posterUrl],
+    },
+    ...(movie.director && { 'video:director': movie.director }),
+    ...(movie.actors && { 'video:actor': movie.actors }),
+  }
+}
 
 export default async function MovieDetailsPage({ params }: { params: { slug: string } }) {
   const movie = await getMovieById(params.slug);
