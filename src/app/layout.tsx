@@ -32,6 +32,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+    <head>
+    <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-N83HSEGNXB"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-N83HSEGNXB');
+          `}
+        </Script>
+        <meta name="google-site-verification" content="qWN3H03gG_jD05HDPMqs6ufNHvB5sCerW9kS6-5Ze5Q" />
+    </head>
       <body
         className={cn(
           'min-h-screen bg-background font-body antialiased flex flex-col',
