@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Toaster } from '@/components/ui/toaster';
-import Head from 'next/head';
 import Script from 'next/script';
 
 
@@ -54,10 +53,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-    <head>
-    <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-N83HSEGNXB"
+      
+        <meta name="google-site-verification" content="qWN3H03gG_jD05HDPMqs6ufNHvB5sCerW9kS6-5Ze5Q" />
+      
+      <body
+        className={cn(
+          'min-h-screen bg-background font-body antialiased flex flex-col',
+          fontBody.variable,
+          fontHeadline.variable
+        )}
+      >
+        <Script
+          id="gtag-manager"
           strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-N83HSEGNXB"
         />
         <Script id="gtag-init" strategy="afterInteractive">
           {`
@@ -67,25 +76,19 @@ export default function RootLayout({
             gtag('config', 'G-N83HSEGNXB');
           `}
         </Script>
-        <meta name="google-site-verification" content="qWN3H03gG_jD05HDPMqs6ufNHvB5sCerW9kS6-5Ze5Q" />
-    </head>
-      <body
-        className={cn(
-          'min-h-screen bg-background font-body antialiased flex flex-col',
-          fontBody.variable,
-          fontHeadline.variable
-        )}
-      >
         <Script
+          id="ad-script-1"
           src="//powderencouraged.com/1b/36/cc/1b36cc294dbb38e45b40365d140a128c.js"
           strategy="afterInteractive"
         />
         <Script
+          id="ad-script-2"
           src="//powderencouraged.com/da/11/d7/da11d78c472c36e22115058e17315051.js"
           strategy="afterInteractive"
         />
         
         <Script
+          id="ad-script-3"
           src="//powderencouraged.com/4dd88bdfb50ac5869a799bbd41c331f1/invoke.js"
           strategy="afterInteractive"
           data-cfasync="false"
