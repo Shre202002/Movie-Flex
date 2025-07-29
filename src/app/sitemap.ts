@@ -4,7 +4,7 @@ import { MetadataRoute } from 'next';
 const URL = 'https://allmoviesdownload.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { movies } = await getMovies({ pageSize: 10000 }); // Fetch all movies, adjust pageSize as needed
+  const { movies } = await getMovies({ getAll: true });
 
   const movieEntries: MetadataRoute.Sitemap = movies.map((movie) => ({
     url: `${URL}/movies/${movie.id}`,
