@@ -21,8 +21,30 @@ const fontHeadline = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'All Movies Download',
-  description: 'A modern movie listing website built with Next.js.',
+  title: 'All Movies Download - Download & Stream Movies for Free',
+  description: 'Explore and download a vast collection of the latest and classic movies for free. Search by genre, year, or actor to find your next favorite film and stream it online.',
+  keywords: ['movies', 'download movies', 'free movies', 'stream movies', 'latest movies', 'hollywood', 'bollywood'],
+  openGraph: {
+    title: 'All Movies Download - Download & Stream Movies for Free',
+    description: 'Explore and download a vast collection of the latest and classic movies for free.',
+    url: 'https://allmoviesdownload.com',
+    siteName: 'All Movies Download',
+    images: [
+      {
+        url: 'https://github.com/user-attachments/assets/32502fac-f80d-4c9c-91fc-7446a6f93a30',
+        width: 1857,
+        height: 911,
+        alt: 'All Movies Download Homepage',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'All Movies Download - Download & Stream Movies for Free',
+    description: 'Explore and download a vast collection of the latest and classic movies for free.',
+    images: ['https://github.com/user-attachments/assets/32502fac-f80d-4c9c-91fc-7446a6f93a30'],
+  },
 };
 
 export default function RootLayout({
