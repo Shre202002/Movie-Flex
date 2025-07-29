@@ -1,11 +1,14 @@
 
 import { db, db2 } from './firebase';
-import { collection, getDocs, doc, getDoc, query, where, limit, orderBy, startAfter, documentId,getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, limit, orderBy, startAfter, documentId, getCountFromServer } from 'firebase/firestore';
 import type { Movie, FirestoreMovieData } from './types';
 import { slugify } from './utils';
 
 // Cache individual movies, but not the whole list for pagination
 const singleMovieCache: Map<string, Movie> = new Map();
+let allMoviesCache: Movie[] | null = null;
+let allMoviesCacheTime: number | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 function mapFirestoreDocToMovie(doc: any): Movie {
     const firestoreData = doc.data() as FirestoreMovieData;
@@ -27,7 +30,9 @@ function mapFirestoreDocToMovie(doc: any): Movie {
         size: '', 
         streamUrl: movieData.stream_online_link?.link,
         downloadLinks: movieData.gdrive_links?.reduce((acc, link) => {
-            acc[link.title] = link.link;
+            if(link.title && link.link) {
+              acc[link.title] = link.link;
+            }
             return acc;
         }, {} as { [key: string]: string }) || {},
         category: firestoreData.category,
@@ -35,23 +40,37 @@ function mapFirestoreDocToMovie(doc: any): Movie {
     };
 }
 
-export async function getMovies({ page = 1, pageSize = 30 }: { page?: number; pageSize?: number }): Promise<{movies: Movie[], totalMovies: number}> {
+export async function getMovies({ page = 1, pageSize = 30, getAll = false }: { page?: number; pageSize?: number, getAll?: boolean }): Promise<{movies: Movie[], totalMovies: number}> {
   try {
+    const now = Date.now();
+    if (getAll && allMoviesCache && allMoviesCacheTime && (now - allMoviesCacheTime < CACHE_DURATION)) {
+      return { movies: allMoviesCache, totalMovies: allMoviesCache.length };
+    }
+
     const moviesCollection = collection(db, 'movies');
     
+    if (getAll) {
+      const movieSnapshot = await getDocs(query(moviesCollection, orderBy('data.release', 'desc')));
+      const movies = movieSnapshot.docs.map(mapFirestoreDocToMovie);
+      allMoviesCache = movies;
+      allMoviesCacheTime = now;
+      movies.forEach(movie => {
+        singleMovieCache.set(movie.id, movie);
+        singleMovieCache.set(movie.slug, movie);
+      });
+      return { movies, totalMovies: movies.length };
+    }
+
     const countSnapshot = await getCountFromServer(moviesCollection);
     const totalMovies = countSnapshot.data().count;
 
     let q = query(moviesCollection, orderBy('data.release', 'desc'), limit(pageSize));
 
     if (page > 1) {
-      // To get the last document of the previous page, we fetch `pageSize * (page - 1)` documents
-      // and take the last one.
       const first = query(moviesCollection, orderBy('data.release', 'desc'), limit(pageSize * (page - 1)));
       const documentSnapshots = await getDocs(first);
       const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
       if (lastVisible) {
-        // Fetch the next page starting after the last visible document
         q = query(moviesCollection, orderBy('data.release', 'desc'), startAfter(lastVisible), limit(pageSize));
       }
     }
@@ -72,15 +91,8 @@ export async function getMovies({ page = 1, pageSize = 30 }: { page?: number; pa
 }
 
 export async function getAllMoviesForFilter(): Promise<Movie[]> {
-  try {
-    const moviesCollection = collection(db, 'movies');
-    const movieSnapshot = await getDocs(moviesCollection);
-    const movies: Movie[] = movieSnapshot.docs.map(mapFirestoreDocToMovie);
-    return movies;
-  } catch (error) {
-    console.error("Failed to fetch all movies for filtering from Firestore", error);
-    return [];
-  }
+  const { movies } = await getMovies({ getAll: true });
+  return movies;
 }
 
 
@@ -190,6 +202,6 @@ export async function getRandomBlog(){
 
   } catch (error) {
     console.error('Error fetching random post:', error);
-    
+    return domain;
   } 
 }
