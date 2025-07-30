@@ -7,6 +7,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Toaster } from '@/components/ui/toaster';
 import Script from 'next/script';
+import { getMovieSiteLink } from '@/lib/data';
 
 
 const fontBody = Inter({
@@ -26,13 +27,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'All Movies Download - Download & Stream Movies for Free',
     description: 'Explore and download a vast collection of the latest and classic movies for free.',
-    url: 'https://allmoviesdownload.com',
+    url: await getMovieSiteLink(),
     siteName: 'All Movies Download',
     images: [
       {
-        url: 'https://github.com/user-attachments/assets/32502fac-f80d-4c9c-91fc-7446a6f93a30',
-        width: 1857,
-        height: 911,
+        url: '/Movie_Studio_30032.ico',
+        width: 1000,
+        height: 1000,
         alt: 'All Movies Download Homepage',
       },
     ],
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'All Movies Download - Download & Stream Movies for Free',
     description: 'Explore and download a vast collection of the latest and classic movies for free.',
-    images: ['https://github.com/user-attachments/assets/32502fac-f80d-4c9c-91fc-7446a6f93a30'],
+    images: ['/Movie_Studio_30032.ico'],
   },
 };
 

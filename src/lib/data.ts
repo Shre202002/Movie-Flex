@@ -205,3 +205,12 @@ export async function getRandomBlog(){
     return domain;
   } 
 }
+
+export async function getMovieSiteLink(){
+  const siteDocRef  = doc(db, 'urls', 'AYLjWyyQBd4wYev1NTKr');
+  const siteDoc = await getDoc(siteDocRef);
+  // if (!siteDoc.exists()){return undefined};
+  const siteName = siteDoc.data()?.movie_site
+  // console.log(siteDoc.data())
+  return siteName;
+}
