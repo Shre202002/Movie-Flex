@@ -49,28 +49,33 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
         constraints.push(where('data.genre', 'array-contains', genre));
     }
 
-    // Since we cannot reliably query a partial string for the year in Firestore,
-    // we fetch based on other queryable fields and then filter by year in our code.
-    const baseQuery = query(moviesCollection, ...constraints, orderBy('data.release', 'desc'));
+    // Firestore queries require an orderBy clause when using range filters or cursors.
+    // We will order by release date as a default.
+    constraints.push(orderBy('data.release', 'desc'));
+
+    const baseQuery = query(moviesCollection, ...constraints);
+    
     const allDocsSnapshot = await getDocs(baseQuery);
 
     let allMovies = allDocsSnapshot.docs.map(mapFirestoreDocToMovie);
 
-    // Apply year filter after fetching
+    // Apply year filter in the application code after fetching, as it's a string field.
     if (year && year !== 'All') {
       allMovies = allMovies.filter(movie => movie.releaseDate && movie.releaseDate.includes(year));
     }
 
     const totalMovies = allMovies.length;
 
-    // Apply pagination to the filtered list
+    // Apply pagination to the final filtered list
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginatedMovies = allMovies.slice(startIndex, endIndex);
 
     paginatedMovies.forEach(movie => {
-      singleMovieCache.set(movie.id, movie);
-      if (movie.slug) {
+      if (!singleMovieCache.has(movie.id)) {
+        singleMovieCache.set(movie.id, movie);
+      }
+      if (movie.slug && !singleMovieCache.has(movie.slug)) {
         singleMovieCache.set(movie.slug, movie);
       }
     });
@@ -107,10 +112,8 @@ export async function getFilterOptions(): Promise<{ categories: string[]; genres
 
 
 export async function getMovieById(id: string): Promise<Movie | undefined> {
-  if (singleMovieCache.has(id)) {
-      const cachedMovie = singleMovieCache.get(id);
-      if(cachedMovie) return cachedMovie;
-  }
+  const cachedMovie = singleMovieCache.get(id);
+  if (cachedMovie) return cachedMovie;
 
   try {
     const movieDocRef = doc(db, 'movies', id);
@@ -133,10 +136,8 @@ export async function getMovieById(id: string): Promise<Movie | undefined> {
 }
 
 export async function getMovieBySlug(slug: string): Promise<Movie | undefined> {
-  if (singleMovieCache.has(slug)) {
-    const cachedMovie = singleMovieCache.get(slug);
-    if (cachedMovie) return cachedMovie;
-  }
+  const cachedMovie = singleMovieCache.get(slug);
+  if (cachedMovie) return cachedMovie;
   
   try {
     const moviesCollection = collection(db, 'movies');
