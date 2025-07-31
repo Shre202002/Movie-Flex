@@ -1,6 +1,6 @@
 
 
-import { getMovieBySlug, getSimilarMovies, getMovieById } from '@/lib/data';
+import { getMovieBySlug, getSimilarMovies, getMovieById, getMovieSiteLink } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -25,7 +25,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   // fetch data
   const movie = await getMovieById(params.slug);
-
+  const siteName = await getMovieSiteLink()
   if (!movie) {
     return {
       title: 'Movie Not Found',
@@ -43,7 +43,7 @@ export async function generateMetadata(
     openGraph: {
       title: movie.title,
       description: movie.plot,
-      url: `https://allmoviesdownload.com/movies/${movie.id}`,
+      url: `${siteName}movies/${movie.id}`,
       siteName: 'All Movies Download',
       images: [
         {
