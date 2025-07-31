@@ -41,7 +41,6 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
   try {
     const moviesCollection = collection(db, 'movies');
     
-    // Base constraints for category and genre which are efficient
     const constraints = [];
     if (category && category !== 'All') {
         constraints.push(where('category', '==', category));
@@ -50,29 +49,21 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
         constraints.push(where('data.genre', 'array-contains', genre));
     }
 
-    // We can't efficiently query by year on a string field like 'Month Day, Year'.
-    // So, we'll fetch based on other filters and then filter by year on the server.
-    // This is a trade-off. For very large datasets, indexing a 'year' number field would be better.
-    
-    // First, get the total count based on queryable fields
-    const countQuery = query(moviesCollection, ...constraints);
-    const countSnapshot = await getCountFromServer(countQuery);
-    let totalMovies = countSnapshot.data().count;
-
-    // Fetch all documents matching the query and then we'll paginate and filter by year in code.
-    // This is not perfectly efficient for pagination with year filter, but will work correctly.
-    const allMatchingDocsQuery = query(moviesCollection, ...constraints, orderBy('data.release', 'desc'));
-    const allDocsSnapshot = await getDocs(allMatchingDocsQuery);
+    // Since we cannot reliably query a partial string for the year in Firestore,
+    // we fetch based on other queryable fields and then filter by year in our code.
+    const baseQuery = query(moviesCollection, ...constraints, orderBy('data.release', 'desc'));
+    const allDocsSnapshot = await getDocs(baseQuery);
 
     let allMovies = allDocsSnapshot.docs.map(mapFirestoreDocToMovie);
 
-    // Now, filter by year if provided
+    // Apply year filter after fetching
     if (year && year !== 'All') {
       allMovies = allMovies.filter(movie => movie.releaseDate && movie.releaseDate.includes(year));
-      totalMovies = allMovies.length; // Update total count after year filtering
     }
 
-    // Manual pagination from the filtered array
+    const totalMovies = allMovies.length;
+
+    // Apply pagination to the filtered list
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginatedMovies = allMovies.slice(startIndex, endIndex);
