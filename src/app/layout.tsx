@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import NextProgressBar from '@/components/progress-bar';
@@ -53,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       
         <meta name="google-site-verification" content="qWN3H03gG_jD05HDPMqs6ufNHvB5sCerW9kS6-5Ze5Q" />
       
