@@ -6,9 +6,6 @@ import { slugify } from './utils';
 
 // Cache individual movies, but not the whole list for pagination
 const singleMovieCache: Map<string, Movie> = new Map();
-let allMoviesCache: Movie[] | null = null;
-let allMoviesCacheTime: number | null = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 function mapFirestoreDocToMovie(doc: any): Movie {
     const firestoreData = doc.data() as FirestoreMovieData;
@@ -40,14 +37,8 @@ function mapFirestoreDocToMovie(doc: any): Movie {
     };
 }
 
-export async function getMovies({ page = 1, pageSize = 30, getAll = false, category, genre, year }: { page?: number; pageSize?: number, getAll?: boolean, category?: string | null, genre?: string | null, year?: string | null }): Promise<{movies: Movie[], totalMovies: number}> {
+export async function getMovies({ page = 1, pageSize = 30, category, genre, year }: { page?: number; pageSize?: number, category?: string | null, genre?: string | null, year?: string | null }): Promise<{movies: Movie[], totalMovies: number}> {
   try {
-    const now = Date.now();
-    // Caching for 'getAll' is complex with filters, so we disable it when filters are active.
-    if (getAll && !category && !genre && !year && allMoviesCache && allMoviesCacheTime && (now - allMoviesCacheTime < CACHE_DURATION)) {
-      return { movies: allMoviesCache, totalMovies: allMoviesCache.length };
-    }
-
     const moviesCollection = collection(db, 'movies');
     
     const constraints = [];
@@ -58,28 +49,14 @@ export async function getMovies({ page = 1, pageSize = 30, getAll = false, categ
         constraints.push(where('data.genre', 'array-contains', genre));
     }
     if (year) {
-        // Firestore doesn't support querying by year directly from a date string. 
-        // This requires either a dedicated 'year' field or client-side filtering.
-        // For now, we will rely on client-side filtering for year if a dedicated field is not present.
-        // This is a placeholder for a more robust solution.
+        // Assuming releaseDate is stored as "Month Day, Year" string.
+        // Firestore queries on parts of a string are limited. This is a best-effort,
+        // and a dedicated 'year' field would be more robust.
+        constraints.push(where('data.release', '>=', `January 1, ${year}`));
+        constraints.push(where('data.release', '<=', `December 31, ${year}`));
     }
 
 
-    if (getAll) {
-      const q = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints);
-      const movieSnapshot = await getDocs(q);
-      const movies = movieSnapshot.docs.map(mapFirestoreDocToMovie);
-      if(!category && !genre && !year) {
-        allMoviesCache = movies;
-        allMoviesCacheTime = now;
-      }
-      movies.forEach(movie => {
-        singleMovieCache.set(movie.id, movie);
-        singleMovieCache.set(movie.slug, movie);
-      });
-      return { movies, totalMovies: movies.length };
-    }
-    
     const countQuery = query(moviesCollection, ...constraints);
     const countSnapshot = await getCountFromServer(countQuery);
     const totalMovies = countSnapshot.data().count;
@@ -131,12 +108,6 @@ export async function getFilterOptions(): Promise<{ categories: string[]; genres
         console.error("Failed to fetch filter options from Firestore", error);
         return { categories: [], genres: [], years: [] };
     }
-}
-
-
-export async function getAllMoviesForFilter(): Promise<Movie[]> {
-  const { movies } = await getMovies({ getAll: true });
-  return movies;
 }
 
 
