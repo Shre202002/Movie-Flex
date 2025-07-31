@@ -40,38 +40,58 @@ function mapFirestoreDocToMovie(doc: any): Movie {
     };
 }
 
-export async function getMovies({ page = 1, pageSize = 30, getAll = false }: { page?: number; pageSize?: number, getAll?: boolean }): Promise<{movies: Movie[], totalMovies: number}> {
+export async function getMovies({ page = 1, pageSize = 30, getAll = false, category, genre, year }: { page?: number; pageSize?: number, getAll?: boolean, category?: string | null, genre?: string | null, year?: string | null }): Promise<{movies: Movie[], totalMovies: number}> {
   try {
     const now = Date.now();
-    if (getAll && allMoviesCache && allMoviesCacheTime && (now - allMoviesCacheTime < CACHE_DURATION)) {
+    // Caching for 'getAll' is complex with filters, so we disable it when filters are active.
+    if (getAll && !category && !genre && !year && allMoviesCache && allMoviesCacheTime && (now - allMoviesCacheTime < CACHE_DURATION)) {
       return { movies: allMoviesCache, totalMovies: allMoviesCache.length };
     }
 
     const moviesCollection = collection(db, 'movies');
     
+    const constraints = [];
+    if (category) {
+        constraints.push(where('category', '==', category));
+    }
+    if (genre) {
+        constraints.push(where('data.genre', 'array-contains', genre));
+    }
+    if (year) {
+        // Firestore doesn't support querying by year directly from a date string. 
+        // This requires either a dedicated 'year' field or client-side filtering.
+        // For now, we will rely on client-side filtering for year if a dedicated field is not present.
+        // This is a placeholder for a more robust solution.
+    }
+
+
     if (getAll) {
-      const movieSnapshot = await getDocs(query(moviesCollection, orderBy('data.release', 'desc')));
+      const q = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints);
+      const movieSnapshot = await getDocs(q);
       const movies = movieSnapshot.docs.map(mapFirestoreDocToMovie);
-      allMoviesCache = movies;
-      allMoviesCacheTime = now;
+      if(!category && !genre && !year) {
+        allMoviesCache = movies;
+        allMoviesCacheTime = now;
+      }
       movies.forEach(movie => {
         singleMovieCache.set(movie.id, movie);
         singleMovieCache.set(movie.slug, movie);
       });
       return { movies, totalMovies: movies.length };
     }
-
-    const countSnapshot = await getCountFromServer(moviesCollection);
+    
+    const countQuery = query(moviesCollection, ...constraints);
+    const countSnapshot = await getCountFromServer(countQuery);
     const totalMovies = countSnapshot.data().count;
 
-    let q = query(moviesCollection, orderBy('data.release', 'desc'), limit(pageSize));
+    let q = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, limit(pageSize));
 
     if (page > 1) {
-      const first = query(moviesCollection, orderBy('data.release', 'desc'), limit(pageSize * (page - 1)));
+      const first = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, limit(pageSize * (page - 1)));
       const documentSnapshots = await getDocs(first);
       const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
       if (lastVisible) {
-        q = query(moviesCollection, orderBy('data.release', 'desc'), startAfter(lastVisible), limit(pageSize));
+        q = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, startAfter(lastVisible), limit(pageSize));
       }
     }
     
@@ -89,6 +109,30 @@ export async function getMovies({ page = 1, pageSize = 30, getAll = false }: { p
     return { movies: [], totalMovies: 0 };
   }
 }
+
+export async function getFilterOptions(): Promise<{ categories: string[]; genres: string[]; years: string[] }> {
+    try {
+        const filterDocRef = doc(db, 'filter', 'filterDoc');
+        const filterDoc = await getDoc(filterDocRef);
+
+        if (!filterDoc.exists()) {
+            console.warn("Filter document 'filterDoc' not found!");
+            return { categories: [], genres: [], years: [] };
+        }
+
+        const data = filterDoc.data();
+        
+        return {
+            categories: data?.category || [],
+            genres: data?.genre || [],
+            years: data?.release || [],
+        };
+    } catch (error) {
+        console.error("Failed to fetch filter options from Firestore", error);
+        return { categories: [], genres: [], years: [] };
+    }
+}
+
 
 export async function getAllMoviesForFilter(): Promise<Movie[]> {
   const { movies } = await getMovies({ getAll: true });

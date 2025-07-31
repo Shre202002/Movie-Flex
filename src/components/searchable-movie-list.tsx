@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { Label } from '@/components/ui/label';
 import { Pagination } from './pagination';
+import { getMovies } from '@/lib/data';
 
 interface SearchableMovieListProps {
   initialMovies: Movie[];
@@ -21,90 +22,70 @@ interface SearchableMovieListProps {
     currentPage: number;
     totalPages: number;
   };
+  filterOptions: {
+    categories: string[];
+    genres: string[];
+    years: string[];
+  }
 }
 
 const PAGE_SIZE = 30;
 
-export function SearchableMovieList({ initialMovies, allMoviesForFilter, pagination }: SearchableMovieListProps) {
+export function SearchableMovieList({ initialMovies, allMoviesForFilter, pagination, filterOptions }: SearchableMovieListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [movies, setMovies] = useState(initialMovies)
+  const [totalPages, setTotalPages] = useState(pagination.totalPages)
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const allGenres = useMemo(() => {
-    const genres = new Set<string>();
-    allMoviesForFilter.forEach(movie => {
-      if (movie.genre && Array.isArray(movie.genre)) {
-        movie.genre.forEach(g => genres.add(g.trim()));
-      }
-    });
-    return ['All', ...Array.from(genres).sort()];
-  }, [allMoviesForFilter]);
-
-  const allCategories = useMemo(() => {
-    const categories = new Set<string>();
-    allMoviesForFilter.forEach(movie => {
-        if(movie.category) {
-            categories.add(movie.category);
-        }
-    });
-    return ['All', ...Array.from(categories).sort()];
-  }, [allMoviesForFilter]);
-
-  const allYears = useMemo(() => {
-    const years = new Set<string>();
-    allMoviesForFilter.forEach(movie => {
-        if(movie.releaseDate) {
-            const year = new Date(movie.releaseDate).getFullYear().toString();
-            if(!isNaN(parseInt(year))) {
-                 years.add(year);
-            }
-        }
-    });
-    return ['All', ...Array.from(years).sort((a,b) => b.localeCompare(a))];
-  }, [allMoviesForFilter]);
-
+  const allGenres = useMemo(() => ['All', ...filterOptions.genres], [filterOptions.genres]);
+  const allCategories = useMemo(() => ['All', ...filterOptions.categories], [filterOptions.categories]);
+  const allYears = useMemo(() => ['All', ...filterOptions.years], [filterOptions.years]);
+  
   const hasActiveFilters = useMemo(() => {
      return !!(searchTerm || (selectedCategory && selectedCategory !== 'All') || (selectedGenre && selectedGenre !== 'All') || (selectedYear && selectedYear !== 'All'));
   }, [searchTerm, selectedCategory, selectedGenre, selectedYear]);
-  
+
   const filteredMovies = useMemo(() => {
     let sourceMovies = hasActiveFilters ? allMoviesForFilter : initialMovies;
 
     let result = sourceMovies;
+    if (hasActiveFilters) {
+        
+        if (selectedCategory && selectedCategory !== 'All') {
+            result = result.filter(movie => movie.category?.toLowerCase() === selectedCategory.toLowerCase());
+        }
 
-    if (selectedCategory && selectedCategory !== 'All') {
-        result = result.filter(movie => movie.category?.toLowerCase() === selectedCategory.toLowerCase());
+        if (selectedGenre && selectedGenre !== 'All') {
+        result = result.filter(movie =>
+            movie.genre && Array.isArray(movie.genre) && movie.genre.map(g => g.toLowerCase()).includes(selectedGenre.toLowerCase())
+        );
+        }
+        
+        if (selectedYear && selectedYear !== 'All') {
+            result = result.filter(movie => movie.releaseDate && new Date(movie.releaseDate).getFullYear().toString() === selectedYear);
+        }
+
+        if (searchTerm) {
+        result = result.filter(
+            movie =>
+            movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (movie.director && movie.director.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        }
     }
 
-    if (selectedGenre && selectedGenre !== 'All') {
-      result = result.filter(movie =>
-        movie.genre && Array.isArray(movie.genre) && movie.genre.map(g => g.toLowerCase()).includes(selectedGenre.toLowerCase())
-      );
-    }
-    
-    if (selectedYear && selectedYear !== 'All') {
-        result = result.filter(movie => movie.releaseDate && new Date(movie.releaseDate).getFullYear().toString() === selectedYear);
-    }
-
-    if (searchTerm) {
-      result = result.filter(
-        movie =>
-          movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (movie.director && movie.director.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
 
     return result;
   }, [initialMovies, allMoviesForFilter, searchTerm, selectedGenre, selectedCategory, selectedYear, hasActiveFilters]);
 
-  const totalPages = hasActiveFilters ? Math.ceil(filteredMovies.length / PAGE_SIZE) : pagination.totalPages;
   
   const paginatedMovies = useMemo(() => {
     if (hasActiveFilters) {
@@ -114,10 +95,37 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
     return initialMovies;
   }, [filteredMovies, currentPage, hasActiveFilters, initialMovies]);
 
-  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string | null>>) => (value: string) => {
-    setter(value === 'All' ? null : value);
+  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string | null>>) => async (value: string) => {
+    const filterValue = value === 'All' ? null : value;
+    setter(filterValue);
     setCurrentPage(1);
+
+    const {movies: newMovies, totalMovies: newTotalMovies} = await getMovies({
+        page: 1,
+        pageSize: PAGE_SIZE,
+        genre: selectedGenre,
+        category: selectedCategory,
+        year: selectedYear
+    })
+    setMovies(newMovies)
+    setTotalPages(Math.ceil(newTotalMovies / PAGE_SIZE))
   };
+
+    const handlePageChange = async (page: number) => {
+        if (hasActiveFilters) {
+            setCurrentPage(page);
+        } else {
+            const { movies: newMovies } = await getMovies({
+                page,
+                pageSize: PAGE_SIZE,
+                genre: selectedGenre,
+                category: selectedCategory,
+                year: selectedYear
+            });
+            setMovies(newMovies);
+            setCurrentPage(page);
+        }
+    };
   
   if (!isClient) {
     return (
@@ -191,12 +199,12 @@ export function SearchableMovieList({ initialMovies, allMoviesForFilter, paginat
         </div>
       </div>
 
-      <MovieList movies={hasActiveFilters ? paginatedMovies : initialMovies} />
+      <MovieList movies={hasActiveFilters ? paginatedMovies : movies} />
       
       <Pagination
-          currentPage={hasActiveFilters ? currentPage : pagination.currentPage}
+          currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={hasActiveFilters ? setCurrentPage : undefined}
+          onPageChange={handlePageChange}
         />
     </div>
   );

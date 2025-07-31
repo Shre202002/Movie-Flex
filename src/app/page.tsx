@@ -1,5 +1,5 @@
 
-import { getMovies } from '@/lib/data';
+import { getMovies, getFilterOptions } from '@/lib/data';
 import { SearchableMovieList } from '@/components/searchable-movie-list';
 
 export default async function HomePage({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
@@ -7,7 +7,7 @@ export default async function HomePage({ searchParams }: { searchParams?: { [key
   const pageSize = 30;
 
   const { movies, totalMovies } = await getMovies({ page, pageSize });
-  const { movies: allMoviesForFilter } = await getMovies({ getAll: true });
+  const { categories, genres, years } = await getFilterOptions();
   
   const totalPages = Math.ceil(totalMovies / pageSize);
 
@@ -21,8 +21,9 @@ export default async function HomePage({ searchParams }: { searchParams?: { [key
       </div>
       <SearchableMovieList 
         initialMovies={movies} 
-        allMoviesForFilter={allMoviesForFilter}
-        pagination={{ currentPage: page, totalPages }} 
+        allMoviesForFilter={movies}
+        pagination={{ currentPage: page, totalPages }}
+        filterOptions={{ categories, genres, years }}
       />
     </main>
   );
