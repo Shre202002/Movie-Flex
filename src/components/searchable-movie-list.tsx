@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Movie } from '@/lib/types';
 import { MovieList } from './movie-list';
@@ -33,16 +32,12 @@ export function SearchableMovieList({ movies, pagination, filterOptions }: Searc
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedCategory = searchParams.get('category');
-  const selectedGenre = searchParams.get('genre');
-  const selectedYear = searchParams.get('year');
-
-  const allCategories = useMemo(() => ['All', ...filterOptions.categories], [filterOptions.categories]);
-  const allGenres = useMemo(() => ['All', ...filterOptions.genres], [filterOptions.genres]);
-  const allYears = useMemo(() => ['All', ...filterOptions.years], [filterOptions.years]);
+  const selectedCategory = searchParams.get('category') || 'All';
+  const selectedGenre = searchParams.get('genre') || 'All';
+  const selectedYear = searchParams.get('year') || 'All';
 
   const handleFilterChange = (filterType: 'category' | 'genre' | 'year') => (value: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     if (value === 'All') {
       params.delete(filterType);
     } else {
@@ -53,7 +48,7 @@ export function SearchableMovieList({ movies, pagination, filterOptions }: Searc
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -64,12 +59,12 @@ export function SearchableMovieList({ movies, pagination, filterOptions }: Searc
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="category-filter">Category</Label>
-                <Select onValueChange={handleFilterChange('category')} value={selectedCategory || 'All'}>
+                <Select onValueChange={handleFilterChange('category')} value={selectedCategory}>
                   <SelectTrigger id="category-filter" className="h-12 text-base">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {allCategories.map(category => (
+                    {['All', ...filterOptions.categories].map(category => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -80,12 +75,12 @@ export function SearchableMovieList({ movies, pagination, filterOptions }: Searc
 
             <div className="grid gap-2">
                 <Label htmlFor="genre-filter">Genre</Label>
-                <Select onValueChange={handleFilterChange('genre')} value={selectedGenre || 'All'}>
+                <Select onValueChange={handleFilterChange('genre')} value={selectedGenre}>
                     <SelectTrigger id="genre-filter" className="h-12 text-base">
                         <SelectValue placeholder="Select a genre" />
                     </SelectTrigger>
                     <SelectContent>
-                        {allGenres.map(genre => (
+                        {['All', ...filterOptions.genres].map(genre => (
                         <SelectItem key={genre} value={genre}>
                             {genre}
                         </SelectItem>
@@ -96,12 +91,12 @@ export function SearchableMovieList({ movies, pagination, filterOptions }: Searc
 
             <div className="grid gap-2">
                 <Label htmlFor="year-filter">Release Year</Label>
-                <Select onValueChange={handleFilterChange('year')} value={selectedYear || 'All'}>
+                <Select onValueChange={handleFilterChange('year')} value={selectedYear}>
                 <SelectTrigger id="year-filter" className="h-12 text-base">
                     <SelectValue placeholder="Select a year" />
                 </SelectTrigger>
                 <SelectContent>
-                    {allYears.map(year => (
+                    {['All', ...filterOptions.years].map(year => (
                     <SelectItem key={year} value={year}>
                         {year}
                     </SelectItem>

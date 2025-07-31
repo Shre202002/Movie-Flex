@@ -43,10 +43,10 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
     
     // Base constraints for category and genre which are efficient
     const constraints = [];
-    if (category) {
+    if (category && category !== 'All') {
         constraints.push(where('category', '==', category));
     }
-    if (genre) {
+    if (genre && genre !== 'All') {
         constraints.push(where('data.genre', 'array-contains', genre));
     }
 
@@ -67,7 +67,7 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
     let allMovies = allDocsSnapshot.docs.map(mapFirestoreDocToMovie);
 
     // Now, filter by year if provided
-    if (year) {
+    if (year && year !== 'All') {
       allMovies = allMovies.filter(movie => movie.releaseDate && movie.releaseDate.includes(year));
       totalMovies = allMovies.length; // Update total count after year filtering
     }
@@ -117,7 +117,8 @@ export async function getFilterOptions(): Promise<{ categories: string[]; genres
 
 export async function getMovieById(id: string): Promise<Movie | undefined> {
   if (singleMovieCache.has(id)) {
-      return singleMovieCache.get(id);
+      const cachedMovie = singleMovieCache.get(id);
+      if(cachedMovie) return cachedMovie;
   }
 
   try {
@@ -142,7 +143,8 @@ export async function getMovieById(id: string): Promise<Movie | undefined> {
 
 export async function getMovieBySlug(slug: string): Promise<Movie | undefined> {
   if (singleMovieCache.has(slug)) {
-    return singleMovieCache.get(slug);
+    const cachedMovie = singleMovieCache.get(slug);
+    if (cachedMovie) return cachedMovie;
   }
   
   try {
@@ -182,6 +184,15 @@ export async function getSimilarMovies({ genre, currentMovieId }: { genre: strin
     );
     const querySnapshot = await getDocs(q);
     const similarMovies = querySnapshot.docs.map(mapFirestoreDocToMovie);
+    
+    similarMovies.forEach(movie => {
+        if (!singleMovieCache.has(movie.id)) {
+            singleMovieCache.set(movie.id, movie);
+        }
+        if (movie.slug && !singleMovieCache.has(movie.slug)) {
+            singleMovieCache.set(movie.slug, movie)
+        }
+    })
 
     return similarMovies;
   } catch (error) {
@@ -235,5 +246,3 @@ export async function getMovieSiteLink(){
   // console.log(siteDoc.data())
   return siteName;
 }
-
-    
