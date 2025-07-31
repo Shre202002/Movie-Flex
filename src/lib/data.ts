@@ -41,6 +41,7 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
   try {
     const moviesCollection = collection(db, 'movies');
     
+    // Base constraints for category and genre which are efficient
     const constraints = [];
     if (category) {
         constraints.push(where('category', '==', category));
@@ -48,53 +49,42 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
     if (genre) {
         constraints.push(where('data.genre', 'array-contains', genre));
     }
-    if (year) {
-        constraints.push(where('data.release', '>=', `January 1, ${year}`));
-        constraints.push(where('data.release', '<=', `December 31, ${year}`));
-    }
-    
-    let countQuery;
-    if (constraints.length > 0) {
-      countQuery = query(moviesCollection, ...constraints);
-    } else {
-      countQuery = query(moviesCollection);
-    }
 
+    // We can't efficiently query by year on a string field like 'Month Day, Year'.
+    // So, we'll fetch based on other filters and then filter by year on the server.
+    // This is a trade-off. For very large datasets, indexing a 'year' number field would be better.
+    
+    // First, get the total count based on queryable fields
+    const countQuery = query(moviesCollection, ...constraints);
     const countSnapshot = await getCountFromServer(countQuery);
-    const totalMovies = countSnapshot.data().count;
+    let totalMovies = countSnapshot.data().count;
 
-    const queryConstraints = [
-      orderBy('data.release', 'desc'),
-      ...constraints,
-      limit(pageSize)
-    ];
+    // Fetch all documents matching the query and then we'll paginate and filter by year in code.
+    // This is not perfectly efficient for pagination with year filter, but will work correctly.
+    const allMatchingDocsQuery = query(moviesCollection, ...constraints, orderBy('data.release', 'desc'));
+    const allDocsSnapshot = await getDocs(allMatchingDocsQuery);
 
-    let q = query(moviesCollection, ...queryConstraints);
+    let allMovies = allDocsSnapshot.docs.map(mapFirestoreDocToMovie);
 
-    if (page > 1) {
-      const firstPageQuery = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, limit(pageSize * (page - 1)));
-      const documentSnapshots = await getDocs(firstPageQuery);
-      const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-      if (lastVisible) {
-        const paginatedQueryConstraints = [
-          orderBy('data.release', 'desc'),
-          ...constraints,
-          startAfter(lastVisible),
-          limit(pageSize)
-        ];
-        q = query(moviesCollection, ...paginatedQueryConstraints);
-      }
+    // Now, filter by year if provided
+    if (year) {
+      allMovies = allMovies.filter(movie => movie.releaseDate && movie.releaseDate.includes(year));
+      totalMovies = allMovies.length; // Update total count after year filtering
     }
-    
-    const movieSnapshot = await getDocs(q);
-    const movies: Movie[] = movieSnapshot.docs.map(mapFirestoreDocToMovie);
 
-    movies.forEach(movie => {
+    // Manual pagination from the filtered array
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedMovies = allMovies.slice(startIndex, endIndex);
+
+    paginatedMovies.forEach(movie => {
       singleMovieCache.set(movie.id, movie);
-      singleMovieCache.set(movie.slug, movie);
+      if (movie.slug) {
+        singleMovieCache.set(movie.slug, movie);
+      }
     });
 
-    return { movies, totalMovies };
+    return { movies: paginatedMovies, totalMovies };
   } catch (error) {
     console.error("Failed to fetch movies from Firestore", error);
     return { movies: [], totalMovies: 0 };
@@ -139,7 +129,9 @@ export async function getMovieById(id: string): Promise<Movie | undefined> {
     }
     const movie = mapFirestoreDocToMovie(movieDoc);
     singleMovieCache.set(movie.id, movie);
-    singleMovieCache.set(movie.slug, movie);
+    if(movie.slug) {
+        singleMovieCache.set(movie.slug, movie);
+    }
     return movie;
 
   } catch (error) {
@@ -166,7 +158,9 @@ export async function getMovieBySlug(slug: string): Promise<Movie | undefined> {
     const movieDoc = querySnapshot.docs[0];
     const movie = mapFirestoreDocToMovie(movieDoc);
     singleMovieCache.set(movie.id, movie);
-    singleMovieCache.set(movie.slug, movie);
+    if(movie.slug) {
+        singleMovieCache.set(movie.slug, movie);
+    }
     return movie;
 
   } catch (error) {
@@ -183,13 +177,11 @@ export async function getSimilarMovies({ genre, currentMovieId }: { genre: strin
     const q = query(
       moviesCollection,
       where('data.genre', 'array-contains', genre),
-      limit(6) // Fetch a few more to filter out the current one
+      where(documentId(), '!=', currentMovieId), // Exclude the current movie
+      limit(5)
     );
     const querySnapshot = await getDocs(q);
-    const similarMovies = querySnapshot.docs
-      .map(mapFirestoreDocToMovie)
-      .filter(movie => movie.id !== currentMovieId)
-      .slice(0, 5); // Return 5 movies
+    const similarMovies = querySnapshot.docs.map(mapFirestoreDocToMovie);
 
     return similarMovies;
   } catch (error) {
@@ -243,3 +235,5 @@ export async function getMovieSiteLink(){
   // console.log(siteDoc.data())
   return siteName;
 }
+
+    
