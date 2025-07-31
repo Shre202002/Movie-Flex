@@ -49,26 +49,40 @@ export async function getMovies({ page = 1, pageSize = 30, category, genre, year
         constraints.push(where('data.genre', 'array-contains', genre));
     }
     if (year) {
-        // Assuming releaseDate is stored as "Month Day, Year" string.
-        // Firestore queries on parts of a string are limited. This is a best-effort,
-        // and a dedicated 'year' field would be more robust.
         constraints.push(where('data.release', '>=', `January 1, ${year}`));
         constraints.push(where('data.release', '<=', `December 31, ${year}`));
     }
+    
+    let countQuery;
+    if (constraints.length > 0) {
+      countQuery = query(moviesCollection, ...constraints);
+    } else {
+      countQuery = query(moviesCollection);
+    }
 
-
-    const countQuery = query(moviesCollection, ...constraints);
     const countSnapshot = await getCountFromServer(countQuery);
     const totalMovies = countSnapshot.data().count;
 
-    let q = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, limit(pageSize));
+    const queryConstraints = [
+      orderBy('data.release', 'desc'),
+      ...constraints,
+      limit(pageSize)
+    ];
+
+    let q = query(moviesCollection, ...queryConstraints);
 
     if (page > 1) {
-      const first = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, limit(pageSize * (page - 1)));
-      const documentSnapshots = await getDocs(first);
+      const firstPageQuery = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, limit(pageSize * (page - 1)));
+      const documentSnapshots = await getDocs(firstPageQuery);
       const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
       if (lastVisible) {
-        q = query(moviesCollection, orderBy('data.release', 'desc'), ...constraints, startAfter(lastVisible), limit(pageSize));
+        const paginatedQueryConstraints = [
+          orderBy('data.release', 'desc'),
+          ...constraints,
+          startAfter(lastVisible),
+          limit(pageSize)
+        ];
+        q = query(moviesCollection, ...paginatedQueryConstraints);
       }
     }
     
