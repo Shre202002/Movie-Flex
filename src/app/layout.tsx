@@ -59,6 +59,7 @@ export default function RootLayout({
         <meta name="google-site-verification" content="qWN3H03gG_jD05HDPMqs6ufNHvB5sCerW9kS6-5Ze5Q" />
       
       <body
+        suppressHydrationWarning={true}
         className={cn(
           'min-h-screen bg-background font-body antialiased flex flex-col',
           fontBody.variable,
