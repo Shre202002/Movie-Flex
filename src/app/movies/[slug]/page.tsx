@@ -14,6 +14,7 @@ import { MovieList } from '@/components/movie-list';
 import { TrailerPlayer } from '@/components/trailer-player';
 import AdBanner from '@/components/AdBanner';
 import type { Metadata, ResolvingMetadata } from 'next';
+import AdblockMessage from '@/components/adblockMessage';
 
 type Props = {
   params: { slug: string }
@@ -90,6 +91,7 @@ export default async function MovieDetailsPage({ params }: { params: { slug: str
 
   return (
     <main className="container mx-auto px-4 py-8">
+      <AdblockMessage/>
       <Breadcrumb className="mb-8">
         <BreadcrumbList>
           <BreadcrumbItem>

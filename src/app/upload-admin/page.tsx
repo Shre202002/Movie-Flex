@@ -1,6 +1,6 @@
 // pages/upload.tsx
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 export default function UploadPage() {
     const [status, setStatus] = useState('');
     const [isVerified, setIsVefied] = useState(false)
+
+    
 
     function Verify() {
         return (
@@ -42,8 +44,8 @@ export default function UploadPage() {
         }
     };
 
-    if (!isVerified) return <Verify />
-
+    // if (!isVerified) return <Verify />
+    
     return (
         <main className="p-8">
             <h1 className="text-xl mb-4">Upload JSON to Firestore</h1>

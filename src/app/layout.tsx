@@ -53,10 +53,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      
+      <head>
         <meta name="google-site-verification" content="qWN3H03gG_jD05HDPMqs6ufNHvB5sCerW9kS6-5Ze5Q" />
+        {/* <Script src="/popup2.js" strategy="afterInteractive" /> */}
+        {/* <Script src="/ads-prebid-wp-banner.js" strategy="afterInteractive" /> */}
+        {/* <Script src="/adblockDetector.js" strategy="afterInteractive" /> */}
+      </head>
       
       <body
         suppressHydrationWarning={true}
@@ -89,7 +96,7 @@ export default function RootLayout({
           src="//powderencouraged.com/da/11/d7/da11d78c472c36e22115058e17315051.js"
           strategy="afterInteractive"
         />
-        
+
         <Script
           id="ad-script-3"
           src="//powderencouraged.com/4dd88bdfb50ac5869a799bbd41c331f1/invoke.js"
@@ -97,11 +104,13 @@ export default function RootLayout({
           data-cfasync="false"
           async
         />
+        
         <Header />
         <div className="flex-grow">{children}</div>
         <Footer />
         <Toaster />
         <NextProgressBar />
+        
       </body>
     </html>
   );
